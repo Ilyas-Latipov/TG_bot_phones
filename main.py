@@ -1,6 +1,6 @@
 import asyncio
 from aiogram import Bot, Dispatcher, types
-from aiogram.filters import Command  # импортируем токен
+from aiogram.filters import Command, CommandObject # импортируем токен
 import logging
 from aiogram.types import ReplyKeyboardRemove, ReplyKeyboardMarkup, KeyboardButton
 
@@ -17,8 +17,8 @@ one = [[KeyboardButton(text='/баланс')],
        [KeyboardButton(text='/назад')]]
 klava_one = ReplyKeyboardMarkup(keyboard=one, resize_keyboard=True, one_time_keyboard=True)
 
-two = [[KeyboardButton(text='/глобальный_рынок')],
-        [KeyboardButton(text='/китайский_рынок')],
+two = [[KeyboardButton(text='/только_глобальный_рынок')],
+        [KeyboardButton(text='/с_китайский_рынком')],
        [KeyboardButton(text='/назад')]]
 klava_two = ReplyKeyboardMarkup(keyboard=two, resize_keyboard=True, one_time_keyboard=True)
 
@@ -26,9 +26,15 @@ three = [[KeyboardButton(text='/новые')],
          [KeyboardButton(text='/б/у')],
          [KeyboardButton(text='/назад')]]
 klava_three = ReplyKeyboardMarkup(keyboard=three, resize_keyboard=True, one_time_keyboard=True)
-
+four = [[KeyboardButton(text='/- apple')],[KeyboardButton(text='/- samsung')],[KeyboardButton(text='/- xiaomi')],
+         [KeyboardButton(text='/- poco')],[KeyboardButton(text='/- oneplus')],[KeyboardButton(text='/- realme')],
+         [KeyboardButton(text='/- oppo')],[KeyboardButton(text='/- honor')],[KeyboardButton(text='/- huawey')],
+         [KeyboardButton(text='/- vivo')], [KeyboardButton(text='/- iqoo')], [KeyboardButton(text='/оставить_все')],
+         [KeyboardButton(text='/назад')], [KeyboardButton(text='/далее')]]
+klava_four = ReplyKeyboardMarkup(keyboard=four, resize_keyboard=True, one_time_keyboard=True)
 async def main():
     bot = Bot(token='7814578784:AAFEIg8-DKS1z6Lte7VGGa_lykNc1xy6GaM')
+    await bot.delete_webhook()
     await dp.start_polling(bot)
 
 
@@ -64,23 +70,30 @@ async def game(message: types.Message):
 async def kamera(message: types.Message):
     await message.reply('k', reply_markup=klava_two)
 
-@dp.message(Command('китайский_рынок'))
+@dp.message(Command('с_китайский_рынком'))
 async def china(message: types.Message):
     await message.reply('c', reply_markup=klava_three)
 
-@dp.message(Command('глобальный_рынок'))
+@dp.message(Command('только_глобальный_рынок'))
 async def globals(message: types.Message):
     await message.reply('g', reply_markup=klava_three)
 
 @dp.message(Command('новые'))
 async def new(message: types.Message):
-    await message.reply('n', reply_markup=klava_three)
+    await message.reply('n', reply_markup=klava_four)
 
 @dp.message(Command('б/у'))
 async def use(message: types.Message):
-    await message.reply('u', reply_markup=klava_three)
+    await message.reply('u', reply_markup=klava_four)
 
-
+# @dp.message(Command('-'))
+# async def delete(message: types.Message):
+#     n = message.text.split('/-')[1]
+#     print(four)
+#     for el in four:
+#         if el[0][0] == n:
+#             four.remove(el[0][0])
+#     await message.reply(f'{n}', reply_markup=klava_four)
 
 @dp.message()  # декоратор для обработчика прочих сообщений
 async def echo_message(message: types.Message):
