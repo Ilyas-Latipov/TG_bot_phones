@@ -1,5 +1,6 @@
 import asyncio
-from aiogram import Bot, Dispatcher, types
+import sqlite3 as sl
+from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import Command, CommandObject # импортируем токен
 import logging
 from aiogram.types import ReplyKeyboardRemove, ReplyKeyboardMarkup, KeyboardButton
@@ -36,21 +37,23 @@ four = [[KeyboardButton(text='/- apple')],[KeyboardButton(text='/- samsung')],[K
 klava_four = ReplyKeyboardMarkup(keyboard=four, resize_keyboard=True, one_time_keyboard=True)
 start = [[KeyboardButton(text='/start')]]
 klava_start = ReplyKeyboardMarkup(keyboard=start, resize_keyboard=True, one_time_keyboard=True)
-end = [[KeyboardButton(text='/оставить_отзыв')], [KeyboardButton(text='/start')]]
+end = [[KeyboardButton(text='/оставить_отзыв')], [KeyboardButton(text='/назад')]]
 klava_end = ReplyKeyboardMarkup(keyboard=end, resize_keyboard=True, one_time_keyboard=True)
 
-phons = ['apple - 13 б/у, баланс', 'samsung - s23 китай, new, баланс-камерофон',
-         'samsung - s23Fe баланс-камерофон', 'samsung - s22 Ultra б/у, баланс-камерофон',
-         'xiaomi - 13T Pro баланс', 'xiaomi - 14T баланс-камерофон', 'xiaomi - 12S Ultra б/у, баланс-камерофон',
-         'xiaomi - 11Ultra камерофон', 'xiaomi - 13 китай, new, баланс-камерофон',
-         'xiaomi - K70 Ultra китай, new, игрофон', 'poco - X7 Pro игрофон', 'oneplus - 11 баланс-камерофон',
-         'oneplus - Ace 5 китай, new, игрофон', 'realme - 14 Pro+ камерофон', 'realme - Neo 7 китай, new, игрофон',
-         'realme - GT6 китай, б/у, игрофон', 'oppo - Find X6 Pro китай, б/у, баланс-камерофон', 'honor - 200 камерофон',
-         'honor - 200 Pro китай, new, камерофон', 'honor - GT китай, new, игрофон',
-         'vivo - X90 Pro+ китай, б/у, баланс-камерофон', 'iqoo - 12 китай, б/у, баланс',
-         'iqoo - Neo 9s Pro+ китай, new, баланс', 'iqoo - Neo 10 китай, new, игрофон', 'pixel - 7 pro б/у, камерофон']
+# phons = ['apple - 13 б/у, баланс', 'samsung - s23 китай, new, баланс-камерофон',
+#          'samsung - s23Fe баланс-камерофон', 'samsung - s22 Ultra б/у, баланс-камерофон',
+#          'xiaomi - 13T Pro баланс', 'xiaomi - 14T баланс-камерофон', 'xiaomi - 12S Ultra б/у, баланс-камерофон',
+#          'xiaomi - 11Ultra камерофон', 'xiaomi - 13 китай, new, баланс-камерофон',
+#          'xiaomi - K70 Ultra китай, new, игрофон', 'poco - X7 Pro игрофон', 'oneplus - 11 баланс-камерофон',
+#          'oneplus - Ace 5 китай, new, игрофон', 'realme - 14 Pro+ камерофон', 'realme - Neo 7 китай, new, игрофон',
+#          'realme - GT6 китай, б/у, игрофон', 'oppo - Find X6 Pro китай, б/у, баланс-камерофон', 'honor - 200 камерофон',
+#          'honor - 200 Pro китай, new, камерофон', 'honor - GT китай, new, игрофон',
+#          'vivo - X90 Pro+ китай, б/у, баланс-камерофон', 'iqoo - 12 китай, б/у, баланс',
+#          'iqoo - Neo 9s Pro+ китай, new, баланс', 'iqoo - Neo 10 китай, new, игрофон', 'pixel - 7 pro б/у, камерофон']
 exit = []
-clas = ''
+delt = ''
+fd = False
+recomendation = 0
 
 async def main():
     await bot.delete_webhook()
@@ -80,21 +83,20 @@ async def process_help_command(message: types.Message):
 
 @dp.message(Command('назад'))
 async def out(message: types.Message):
-    global exit, clas
+    global exit, delt, recomendation
     exit = []
-    clas = ''
+    delt = ''
+    recomendation = 0
     await message.reply('Вернулись назад :)\n/start', reply_markup=klava_start)
 
 @dp.message(Command('+'))
 async def balance(message: types.Message):
-    global clas
-    category = message.text.split('/+ ')[1]
-    clas = category
-    print(category)
-    for el in phons:
-        if category in el.split()[-1] and 'китай' not in el.split()[-3] and 'б/у' not in el.split()[-2]:
-            exit.append(el)
-    print(exit)
+    global exit
+    if exit == [] and len(message.text.split('/+ ')) > 1:
+        print(len(message.text.split('/+ ')))
+        exit.append(message.text.split('/+ ')[1])
+    elif len(exit) >= 1:
+        exit[0] = message.text.split('/+ ')[1]
     await message.reply('Теперь выберите для какого рынка вам нужет смартфон:\n\n'
                         'Глобальный рынок - рынок для всего мира, поддерживает все бэнды (связь ловит по максимуму'
                         ':) ) и все языки. Легкая настройка.\n\n'
@@ -108,11 +110,11 @@ async def balance(message: types.Message):
 
 @dp.message(Command('с_китайский_рынком'))
 async def china(message: types.Message):
-    print(clas)
-    for el in phons:
-        if 'китай' in el.split()[-3] and clas in el.split()[-1] and 'б/у' not in el.split()[-2]:
-            exit.append(el)
-    print(exit)
+    global exit
+    if len(exit) == 1:
+        exit.append('глобалкитай')
+    elif len(exit) >= 2:
+        exit[1] = 'глобалкитай'
     await message.reply('Теперь решите в каком состоянии вы выбираете телефон:\n\n'
                         'Новый - ничего лишнего, абсолютно новый телефон в коробке.\n\n'
                         'Б/у (использованный) - телефон мог побывать в ремонте, или быть старой моделью в идеальном '
@@ -121,6 +123,11 @@ async def china(message: types.Message):
 
 @dp.message(Command('только_глобальный_рынок'))
 async def globals(message: types.Message):
+    global exit
+    if len(exit) == 1:
+        exit.append('глобал')
+    elif len(exit) >= 2:
+        exit[1] = 'глобал'
     await message.reply('Теперь решите в каком состоянии вы выбираете телефон:\n\n'
                         'Новый - ничего лишнего, абсолютно новый телефон в коробке.\n\n'
                         'Б/у (использованный) - телефон мог побывать в ремонте, или быть старой моделью в идеальном '
@@ -129,64 +136,129 @@ async def globals(message: types.Message):
 
 @dp.message(Command('только_новые'))
 async def new(message: types.Message):
+    global exit
+    if len(exit) == 2:
+        exit.append('новый')
+    elif len(exit) >= 3:
+        exit[2] = 'новый'
     await message.reply('Теперь исключите все марки смартфонов которые вы не хотите видеть у себя в рекомендации,'
                         'а потом нажмите /далее и ваш список готов :). Если вы хотите увидеть всех - просто нажмите '
                         '/далее', reply_markup=klava_four)
 
 @dp.message(Command('можно'))
 async def use(message: types.Message):
-    for el in phons:
-        if 'б/у' in el.split()[-2] and clas in el.split()[-1]:
-            exit.append(el)
-    print(exit)
+    global exit
+    if len(exit) == 2:
+        exit.append('новыйб/у')
+    elif len(exit) >= 3:
+        exit[2] = 'новыйб/у'
     await message.reply('Теперь исключите все марки смартфонов которые вы не хотите видеть у себя в рекомендации,'
                         'а потом нажмите /далее и ваш список готов :). Если вы хотите увидеть всех - просто нажмите '
                         '/далее', reply_markup=klava_four)
 
 @dp.message(Command('-'))
 async def delete(message: types.Message):
-    mark = message.text.split('/- ')[1]
-    delt = []
-    text = f'{mark}'
-    for el in exit:
-        if el.split()[0] == mark:
-            delt.append(el)
-    if delt == []:
-        text = 'этой марки уже нет в списке рекомендаций'
-    if exit == []:
-        text = 'у вас нет рекомендованных смартфонов :('
-    for el in delt:
-        exit.remove(el)
-    print(exit)
-    await message.reply(f'Вы исключили марку - {text}', reply_markup=klava_four)
+    global delt
+    if len(message.text.split('/- ')) > 1:
+        mark = message.text.split('/- ')[1]
+        delt += f'{mark} '
+        await message.reply(f'Вы исключили марку - {mark}\n\n'
+                            f'Все исключенные марки смартфонов: {delt}', reply_markup=klava_four)
+    else:
+        await message.reply('Вы не написали марку', reply_markup=klava_four)
 
 @dp.message(Command('далее'))
 async def use(message: types.Message):
-    end = '\n'.join(exit)
-    media = types.MediaGroup()
-    media.attach_photo(types.InputFile('Рабочий стол/media/apple - 13.jpg'), 'apple - 13')
-    await message.reply_media_group(media=media)
-    await message.reply(f'Вам может подойти:\n\n{end}', reply_markup=klava_end)
+    global recomendation
+    # end = '\n'.join(exit)
+    # media = types.MediaGroup()
+    # media.attach_photo(types.InputFile('Рабочий стол/media/apple - 13.jpg'), 'apple - 13')
+    # await message.reply_media_group(media=media)
+    baza = sl.connect('phons_db.db')
+    cur = baza.cursor()
+    phons_in = cur.execute("SELECT * FROM phons_in")
+    # Добавление даных из базы в выводной лист
+    if len(exit) == 3:
+        for row in phons_in:
+            if exit != []:
+                if row[4] == exit[0] and row[5] in exit[1] and row[6] in exit[2] and row[0][:5] not in delt:
+                    recomendation += 1
+                    await message.reply(f'Вам может подойти:\n\n{row[1]}\nКлассификация:'
+                                        f'{row[4]}, {row[5]}, {row[6]}\n\n', reply_markup=klava_end)
+                    await message.answer_photo(photo=f'{row[2]}')
+    # Отключение от бызы данных
+    baza.close()
 
-# def addbd():
-#         # Подключение бызы данных
-#     baza = sl.connect('l1.db')
-#     cur = baza.cursor()
-#     game = cur.execute("SELECT * FROM games")
-#     # Добавление даных из базы в выводной лист
-#     for row in game:
-#         name = row[0]
-#         text = row[1],
-#         url = row[2]
-#         for el in exit:
-#             if el.split(';')[0] == name:
-#                 message.reply(f'Вам может подойти:\n\n{end}', reply_markup=klava_end)
-#     # Отключение от бызы данных
-#     baza.close()
+    if recomendation == 0:
+        await message.reply(f'У вас нет рекомендованных смартфонов :(', reply_markup=klava_end)
+    # print(exit)
+    # await message.reply(f'Вам может подойти:\n\n{", ".join(delt)}\n\n'
+    #                     f'{", ".join(exit)}', reply_markup=klava_end)
+
+@dp.message(Command('оставить_отзыв'))
+async def add_feedback(message: types.Message):
+    global fd
+    fd = True
+    await message.answer('Пишите ваш отзыв ;)', reply_markup=klava_start)
+@dp.message(Command('add'))
+async def add(message: types.Message):
+    elem = message.text.split('; ')
+    print(elem[0][5:])
+    baza = sl.connect('phons_db.db')
+    cur = baza.cursor()
+    # Добавление данных в базу
+    cur.execute(f'INSERT INTO phons_in (name, descript, url, price, clas, market, condition) '
+                f'values(?, ?, ?, ?, ?, ?, ?)',
+                (elem[0][5:], elem[1], elem[2], elem[3], elem[4], elem[5], elem[6]))
+    # Сохранение изменений в базе
+    baza.commit()
+    await message.answer('Успешно :)', reply_markup=klava_start)
+
+@dp.message(Command('read'))
+async def read(message: types.Message):
+    await message.answer('Смотрите :)', reply_markup=klava_start)
+    baza = sl.connect('feedback_db.db')
+    cur = baza.cursor()
+    feedbacks = cur.execute("SELECT * FROM feedbacks")
+    for row in feedbacks:
+        await message.answer(row[1], reply_markup=klava_start)
+
+@dp.message(Command('clear'))
+async def clear(message: types.Message):
+    # Подключение бызы данных
+    baza = sl.connect('feedback_db.db')
+    cur = baza.cursor()
+    # Удаление данныз в базе
+    cur.execute('DELETE from feedbacks')
+    # Сохранение изменений в базе
+    baza.commit()
+    # Отключение от бызы данных
+    baza.close()
+    await message.answer('Отзывы удаленны из БД', reply_markup=klava_start)
+
+@dp.message(F.photo)
+async def foto_url(message: types.Message):
+    photo_data = message.photo[-1]
+    await message.answer(f'{photo_data}')
 
 @dp.message()  # декоратор для обработчика прочих сообщений
 async def echo_message(message: types.Message):
-    await message.answer('Максимум что вам надо писать в чат это команду /start, а остальное - кнопки:)')  # отправляет обратно новое сообщение с тем же текстом
+    global fd
+    if fd:
+        txt = message.text
+        print(txt)
+        baza = sl.connect('feedback_db.db')
+        cur = baza.cursor()
+        # Добавление данных в базу
+        cur.execute(f'INSERT INTO feedbacks (text)'
+                    f'values(?)', (txt,))
+        # Сохранение изменений в базе
+        baza.commit()
+        fd = False
+        await message.answer('Спасибо! :)', reply_markup=klava_start)
+    else:
+        await message.answer('Максимум что вам надо писать в чат это команду /start, а остальное - кнопки:)')
+
 
 
 if __name__ == '__main__':
