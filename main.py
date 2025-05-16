@@ -21,7 +21,7 @@ one = [[KeyboardButton(text='/+ баланс')],
 klava_one = ReplyKeyboardMarkup(keyboard=one, resize_keyboard=True, one_time_keyboard=True)
 
 two = [[KeyboardButton(text='/только_глобальный_рынок')],
-       [KeyboardButton(text='/с_китайский_рынком')],
+       [KeyboardButton(text='/с_иностранным_рынком')],
        [KeyboardButton(text='/назад')]]
 klava_two = ReplyKeyboardMarkup(keyboard=two, resize_keyboard=True, one_time_keyboard=True)
 
@@ -91,30 +91,29 @@ async def out(message: types.Message):
 async def balance(message: types.Message):
     global exit
     if exit == [] and len(message.text.split('/+ ')) > 1:
-        print(len(message.text.split('/+ ')))
         exit.append(message.text.split('/+ ')[1])
     elif len(exit) >= 1:
         exit[0] = message.text.split('/+ ')[1]
     await message.reply('Теперь выберите для какого рынка вам нужет смартфон:\n\n'
                         'Глобальный рынок - рынок для всего мира, поддерживает все бэнды (связь ловит по максимуму'
                         ':) ) и все языки. Легкая настройка.\n\n'
-                        'Китайский рынок - открывает двери к смартфонам цена/качество. Поддерживает не все бэнды'
+                        'Иностранный рынок - открывает двери к смартфонам цена/качество. Поддерживает не все бэнды'
                         '(ловит чуть хуже). Почти везде есть поддержка русского языка и везде английского языка.'
                         'Чтобы его настроить придется повозиться :). Телефон может прийти перепрошитым под '
                         'глобальную версию (система от глобальной версии со всеми языками и легкой настройкой, но '
                         'бэндов не прибавится). За все эти муки смартфоны обходятся по низкой цене :). Доставка так же '
-                        'из Китая и если придет брак, то отправить его обратно будет не просто. Так же некоторые '
-                        'смартфоны в китайской версии имеют лучшую оболочку, чем в глобальной версии ;)',
+                        'из за рубежа и если придет брак, то отправить его обратно будет не просто. Так же некоторые '
+                        'китайские смартфоны в китайской версии имеют лучшую оболочку, чем в глобальной версии ;)',
                         reply_markup=klava_two)
 
 
-@dp.message(Command('с_китайский_рынком'))
+@dp.message(Command('с_иностранным_рынком'))
 async def china(message: types.Message):
     global exit
     if len(exit) == 1:
-        exit.append('глобалкитай')
+        exit.append('не глобал')
     elif len(exit) >= 2:
-        exit[1] = 'глобалкитай'
+        exit[1] = 'не глобал'
     await message.reply('Теперь решите в каком состоянии вы выбираете телефон:\n\n'
                         'Новый - ничего лишнего, абсолютно новый телефон в коробке.\n\n'
                         'Б/у (использованный) - телефон мог побывать в ремонте, или быть старой моделью в идеальном '
@@ -176,15 +175,10 @@ async def delete(message: types.Message):
 async def use(message: types.Message):
     global recomendation
     recomendation = 0
-    # end = '\n'.join(exit)
-    # media = types.MediaGroup()
-    # media.attach_photo(types.InputFile('Рабочий стол/media/apple - 13.jpg'), 'apple - 13')
-    # await message.reply_media_group(media=media)
     baza = sl.connect('phons_db.db')
     cur = baza.cursor()
     phons_in = cur.execute("SELECT * FROM phons_in")
     # Добавление даных из базы в выводной лист
-    print(exit)
     if len(exit) == 3:
         for row in phons_in:
             if exit != []:
@@ -199,9 +193,6 @@ async def use(message: types.Message):
 
     if recomendation == 0:
         await message.reply(f'У вас нет рекомендованных смартфонов :(', reply_markup=klava_end)
-    # print(exit)
-    # await message.reply(f'Вам может подойти:\n\n{", ".join(delt)}\n\n'
-    #                     f'{", ".join(exit)}', reply_markup=klava_end)
 
 
 @dp.message(Command('оставить_отзыв'))
@@ -214,8 +205,7 @@ async def add_feedback(message: types.Message):
 @dp.message(Command('add'))
 async def add(message: types.Message):
     elem = message.text.split('; ')
-    print(elem[0][10:])
-    if elem[0][5:10] == KEY:
+    if elem[0][5:9] == KEY:
         baza = sl.connect('phons_db.db')
         cur = baza.cursor()
         # Добавление данных в базу
@@ -278,7 +268,6 @@ async def echo_message(message: types.Message):
     global fd
     if fd:
         txt = message.text
-        print(txt)
         baza = sl.connect('feedback_db.db')
         cur = baza.cursor()
         # Добавление данных в базу
